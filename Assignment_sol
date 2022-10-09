@@ -6,3 +6,7 @@ Complete the given below task to finish this assignment.
 
 1. Setup Confluent Kafka Account
 Done upto these.
+2. Create one kafka topic named as "restaurent-take-away-data" with 3 partitions
+https://user-images.githubusercontent.com/53964156/194749095-2882bc98-3a81-4036-b24d-751a83aed001.png
+
+3. Setup key (string) & value (json) schema in the confluent schema registry
