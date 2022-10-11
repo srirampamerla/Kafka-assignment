@@ -67,11 +67,10 @@ def main(topic):
 
     consumer = Consumer(consumer_conf)
     consumer.subscribe([topic])
-    i=0
+    i=1
 
     while True:
         try:
-            # SIGINT can't be handled when polling, limit timeout to 1 second.
             msg = consumer.poll(1.0)
             if msg is None:
                 continue
@@ -82,7 +81,7 @@ def main(topic):
                 
                 print("User record {}: order: {}\n".format(msg.key(), order))
                 i=i+1
-                print(i)   
+                   
         except KeyboardInterrupt:
             break
     print("total no of records",i)    
