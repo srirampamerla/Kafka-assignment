@@ -83,7 +83,7 @@ def main(topic):
     # creating producer instance
     producer = Producer(sasl_conf())
 
-    producer.poll(0.0)
+    producer.poll(10.0)
     try:
         for order in get_order_instance(file_url):
                     print(order)
