@@ -10,3 +10,109 @@ Done upto these.
 https://user-images.githubusercontent.com/53964156/194749095-2882bc98-3a81-4036-b24d-751a83aed001.png
 
 3. Setup key (string) & value (json) schema in the confluent schema registry
+done
+Write a kafka producer program (python or any other language) to read data records from restaurent data csv file,make sure schema is not hardcoded in the producer code, 
+read the latest version of schema and schema_str from schema registry and use it for data serialization.
+import pandas as pd
+import time
+from uuid import uuid4
+from confluent_kafka import Producer
+from confluent_kafka.serialization import StringSerializer, SerializationContext, MessageField
+from confluent_kafka.schema_registry import SchemaRegistryClient
+from confluent_kafka.schema_registry.json_schema import JSONSerializer
+
+
+# Global variables
+file_url = "https://raw.githubusercontent.com/srirampamerla/Confluent-Kafka-Setup/main/restaurant_orders.csv"
+Columns_order = ['order_number', "order_date", "item_name","quantity", "product_price", "total_products"]
+API_KEY = 'VOWLPGRMKXCAXIYP'
+ENDPOINT_SCHEMA_URL  = 'https://psrc-8kz20.us-east-2.aws.confluent.cloud'
+API_SECRET_KEY = 'l9G6Nn+aDsnwl/0UhVu8sI3akMsCHD3xHu/1pe/QahAmYQiwRjJu/V8ZlbKvt8i2'
+BOOTSTRAP_SERVER = 'pkc-ymrq7.us-east-2.aws.confluent.cloud:9092'
+SECURITY_PROTOCOL = 'SASL_SSL'
+SSL_MACHENISM = 'PLAIN'
+SCHEMA_REGISTRY_API_KEY = 'UVG33EOIXL6AOL72'
+SCHEMA_REGISTRY_API_SECRET = '6mtAqyKPLgiAPCHg0AXdIMm61uSsNqiXXeyEINTHpVlw4+j+vyUA8i5i69eXezR7'
+
+def sasl_conf():
+  sasl_conf = {'sasl.mechanism': SSL_MACHENISM,
+                 # Set to SASL_SSL to enable TLS support.
+                #  'security.protocol': 'SASL_PLAINTEXT'}
+                'bootstrap.servers':BOOTSTRAP_SERVER,
+                'security.protocol': SECURITY_PROTOCOL,
+                'sasl.username': API_KEY,
+                'sasl.password': API_SECRET_KEY
+              }
+  return sasl_conf
+
+
+
+def schema_config():
+  return {
+      'url':ENDPOINT_SCHEMA_URL,
+      'basic.auth.user.info':f"{SCHEMA_REGISTRY_API_KEY}:{SCHEMA_REGISTRY_API_SECRET}"
+    }
+class Order:
+    def __init__(self, order: dict):
+        self.order = order
+
+    def __str__(self):
+        return f'{self.order}'
+
+
+def get_order_instance(file_url):
+    df = pd.read_csv(file_url)
+    df = df.iloc[:]
+    ls = []
+    for data in df.values:
+        order = Order(dict(zip(Columns_order, data)))
+        yield order
+
+
+# convert object to dict before serialization
+def order_to_dict(order: Order, ctx):
+    return order.order
+
+
+# Delivery report
+def delivery_report(err, msg):
+    if err is not None:
+        print('Delivery failed for the user record {}: {}'.format(msg.key, err))
+        return
+    print('user record {} successfully produced and published to the topic \'{}\' in partition [{}] at offset {}'.format(
+        msg.key(), msg.topic(), msg.partition(), msg.offset()))
+
+
+def main(topic):
+    # Create schema registry client
+    schema_registry_client = SchemaRegistryClient(schema_config())
+
+    # Get latest schema
+    latest_schema = schema_registry_client.get_latest_version('restaurent-take-away-data-value').schema.schema_str
+
+    # creating JSON and String serializer
+    string_serializer = StringSerializer('utf_8')
+    json_serializer = JSONSerializer(latest_schema, schema_registry_client, order_to_dict)
+
+    # creating producer instance
+    producer = Producer(sasl_conf())
+
+    producer.poll(0.0)
+    try:
+        for order in get_order_instance(file_url):
+            print(order)
+            producer.produce(topic=topic,
+                             key=string_serializer(str(uuid4()), order_to_dict),
+                             value=json_serializer(order, SerializationContext(topic, MessageField.VALUE)),   
+                             on_delivery=delivery_report)
+            time.sleep(10)
+    except KeyboardInterrupt:
+        pass
+    except ValueError:
+        print("Invalid input, discarding record...")
+        pass
+
+    print("\nFlushing records...")
+    producer.flush()
+
+main('restaurent-take-away-data')
