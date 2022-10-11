@@ -23,6 +23,9 @@ https://github.com/srirampamerla/Kafka-assignment/blob/main/producer_file
     a.) Use "group.id" property in consumer config for both consumers and mention different group_ids in kafka_consumer_1.py & kafka_consumer_2.py,
         apply "earliest" offset property in both consumers and run these two consumers from two different terminals. Calculate how many records each consumer
         consumed and printed on the terminal
+        
+        https://github.com/srirampamerla/Kafka-assignment/wiki/output-of-different-group-id.
+         pls refer this link.
     b.) Use "group.id" property in consumer config for both consumers and mention same group_ids in kafka_consumer_1.py & kafka_consumer_2.py,
         apply "earliest" offset property in both consumers and run these two consumers from two different terminals. Calculate how many records each consumer
         consumed and printed on the terminal
