@@ -62,26 +62,30 @@ def main(topic):
     consumer_conf = sasl_conf()
     consumer_conf.update({
                      'group.id': 'group1',
-                     'auto.offset.reset': "latest"})
+                     'auto.offset.reset': "earliest"})
                      #earliest from first latest means last read
 
     consumer = Consumer(consumer_conf)
     consumer.subscribe([topic])
-
+    i=0
 
     while True:
         try:
+            # SIGINT can't be handled when polling, limit timeout to 1 second.
             msg = consumer.poll(1.0)
             if msg is None:
                 continue
 
             order = json_deserializer(msg.value(), SerializationContext(msg.topic(), MessageField.VALUE))
-
+            
             if order is not None:
+                
                 print("User record {}: order: {}\n".format(msg.key(), order))
+                i=i+1
+                   
         except KeyboardInterrupt:
             break
-
+    print("total no of records",i)    
     consumer.close()
 
 main("restaurent-take-away-data")
