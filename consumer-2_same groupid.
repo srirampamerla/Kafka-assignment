@@ -61,13 +61,13 @@ def main(topic):
 
     consumer_conf = sasl_conf()
     consumer_conf.update({
-                     'group.id': 'group2',
-                     'auto.offset.reset': "latest"})
+                     'group.id': 'group1',
+                     'auto.offset.reset': "earliest"})
                      #earliest from first latest means last read
 
     consumer = Consumer(consumer_conf)
     consumer.subscribe([topic])
-
+    i=0
 
     while True:
         try:
@@ -76,13 +76,14 @@ def main(topic):
                 continue
 
             order = json_deserializer(msg.value(), SerializationContext(msg.topic(), MessageField.VALUE))
-
+            
             if order is not None:
+                
                 print("User record {}: order: {}\n".format(msg.key(), order))
-
+                i=i+1 
         except KeyboardInterrupt:
             break
-
+    print("total no of records",i)    
     consumer.close()
 
 main("restaurent-take-away-data")
