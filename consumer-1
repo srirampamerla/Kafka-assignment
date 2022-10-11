@@ -71,7 +71,6 @@ def main(topic):
 
     while True:
         try:
-            # SIGINT can't be handled when polling, limit timeout to 1 second.
             msg = consumer.poll(1.0)
             if msg is None:
                 continue
